@@ -1,0 +1,55 @@
+version: '3'
+services:
+  start-beacond:
+    build:
+      context: .
+      dockerfile: Dockerfile.beacond  # for the `start` command
+    environment:
+      - TESTAPP_FILES_DIR=/beacon-kit/testing/files  # Add the actual path
+      - JWT_SECRET_PATH=${TESTAPP_FILES_DIR}/jwt.hex
+    volumes:
+      - ./testing/files:/beacon-kit/testing/files
+      - ./.tmp:/beacon-kit/.tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: /beacon-kit/testing/files/entrypoint-docker.sh
+    depends_on:
+      - local-da
+      - start-reth
+    networks:
+      - beacon-network
+
+  start-reth:
+    image: ghcr.io/paradigmxyz/reth  # Use the official Reth image
+    container_name: start-reth
+    ports:
+      - "30303:30303"  # P2P port
+      - "8545:8545"    # HTTP port
+      - "8551:8551"    # Auth RPC port
+    volumes:
+      - ./testing/files:/testapp_files  # Mount the directory for test app files
+      - ./.tmp:/.tmp                    # Mount a temporary directory for data
+    command: |
+      node
+      --chain /testapp_files/eth-genesis.json
+      --http
+      --http.addr 0.0.0.0
+      --http.api eth,net
+      --authrpc.addr 0.0.0.0
+      --authrpc.jwtsecret /testapp_files/jwt.hex
+      --datadir /.tmp/eth-home
+      --ipcpath /.tmp/eth-home/eth-engine.ipc
+    restart: unless-stopped
+    networks:
+      - beacon-network
+
+  local-da:
+    image: ghcr.io/rollkit/local-da:v0.2.1
+    container_name: local-da
+    ports:
+      - "7980:7980"
+    networks:
+      - beacon-network
+
+networks:
+  beacon-network:
+    driver: bridge

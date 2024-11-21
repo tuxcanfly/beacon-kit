@@ -1,0 +1,35 @@
+# Dockerfile for `start` command
+FROM alpine:latest
+FROM golang:1.23-alpine
+
+# Install required packages
+# Install Go and other dependencies
+RUN apk add --no-cache bash make curl jq go ncurses docker
+RUN apk add --no-cache git
+RUN apk add --no-cache build-base
+RUN apk add --no-cache gcc musl-dev
+
+# Set environment variables and directories
+ENV TESTAPP_FILES_DIR=/beacon-kit/testing/files
+ENV JWT_PATH=$TESTAPP_FILES_DIR/jwt.hex
+ENV ETH_GENESIS_PATH=$TESTAPP_FILES_DIR/eth-genesis.json
+ENV NETHER_ETH_GENESIS_PATH=$TESTAPP_FILES_DIR/eth-nether-genesis.json
+ENV ETH_DATA_DIR=/beacon-kit/.tmp/eth-home
+ENV IPC_PATH=$ETH_DATA_DIR/eth-engine.ipc
+ENV HTTP_URL=0.0.0.0:8551
+ENV IPC_PREFIX=ipc://
+ENV HTTP_PREFIX=http://
+ENV JWT_SECRET_PATH=$JWT_PATH
+
+RUN mkdir -p /beacon-kit
+COPY . /beacon-kit
+COPY ./kurtosis /beacon-kit/kurtosis
+
+RUN chmod +x $TESTAPP_FILES_DIR/entrypoint-docker.sh
+
+WORKDIR /beacon-kit
+RUN make build
+
+# Run the start command
+CMD JWT_SECRET_PATH=$JWT_PATH $TESTAPP_FILES_DIR/entrypoint-docker.sh
+# CMD ["sh", "-c", "JWT_SECRET_PATH=$JWT_PATH $TESTAPP_FILES_DIR/entrypoint.sh", "Y"]
