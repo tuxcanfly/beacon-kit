@@ -25,6 +25,7 @@ FROM alpine:latest
 
 # Install minimal runtime dependencies
 RUN apk add --no-cache \
+    make \
     bash \
     curl \
     jq \
@@ -51,6 +52,7 @@ COPY --from=builder /beacon-kit/testing/files/jwt.hex /beacon-kit/testing/files/
 COPY --from=builder /beacon-kit/testing/files/eth-genesis.json /beacon-kit/testing/files/
 COPY --from=builder /beacon-kit/testing/files/eth-nether-genesis.json /beacon-kit/testing/files/
 COPY --from=builder /beacon-kit/build/bin/beacond /bin/beacond
+COPY --from=builder /beacon-kit/build/bin/beacond /beacon-kit/build/bin/beacond
 
 # Set working directory
 WORKDIR /beacon-kit
