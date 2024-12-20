@@ -1,9 +1,14 @@
 assets/
+build/
 bin/
 docs/
 networks/
 proto/
 tools/
+testing/
 .github/
+.git/
 .vscode/
 *.md
+go.sum
+go.mod
