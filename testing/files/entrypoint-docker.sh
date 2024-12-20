@@ -57,7 +57,7 @@ echo "JWT_SECRET: $JWT_SECRET_PATH"
 set -e
 
 # Reinstall daemon
-make build
+# make build
 
 overwrite="Y"
 # if [ -d $HOMEDIR ]; then
@@ -73,13 +73,13 @@ export CHAIN_SPEC="devnet"
 # Setup local node if overwrite is set to Yes, otherwise skip setup
 if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	rm -rf $HOMEDIR
-	./build/bin/beacond init $MONIKER \
+	beacond init $MONIKER \
 		--chain-id $CHAINID \
 		--home $HOMEDIR \
 		--consensus-key-algo $CONSENSUS_KEY_ALGO
-	./build/bin/beacond genesis add-premined-deposit --home $HOMEDIR
-	./build/bin/beacond genesis collect-premined-deposits --home $HOMEDIR 
-	./build/bin/beacond genesis execution-payload "$ETH_GENESIS" --home $HOMEDIR
+	beacond genesis add-premined-deposit --home $HOMEDIR
+	beacond genesis collect-premined-deposits --home $HOMEDIR
+	beacond genesis execution-payload "$ETH_GENESIS" --home $HOMEDIR
 fi
 
 ADDRESS=$(jq -r '.address' $HOMEDIR/config/priv_validator_key.json)
@@ -87,7 +87,7 @@ PUB_KEY=$(jq -r '.pub_key' $HOMEDIR/config/priv_validator_key.json)
 jq --argjson pubKey "$PUB_KEY" '.consensus["validators"]=[{"address": "'$ADDRESS'", "pub_key": $pubKey, "power": "32000000000", "name": "Rollkit Sequencer"}]' $GENESIS > temp.json && mv temp.json $GENESIS
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-BEACON_START_CMD="./build/bin/beacond start --pruning=nothing "$TRACE" \
+BEACON_START_CMD="beacond start --pruning=nothing "$TRACE" \
 --log_level $LOGLEVEL --api.enabled-unsafe-cors \
 --rollkit.aggregator --rollkit.da_address http://local-da:7980 --rpc.laddr tcp://127.0.0.1:36657 --grpc.address 127.0.0.1:9290 --p2p.laddr "0.0.0.0:36656" \
 --api.enable --api.swagger --minimum-gas-prices=0.0001abgt \
